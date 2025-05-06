@@ -202,8 +202,10 @@ class Tasks:
             selectedconditions = None,
             timestamp = False,
             showcontentstack = [],
-            currconditionstack = []
+            currconditionstack = [],
+            prefixlines = []
     ):
+
         # Define some enums for state machine
         REGULAR_LINES = 0
         TENTATIVE_PARSING = 1
@@ -238,6 +240,7 @@ class Tasks:
         regexp_title = re.compile(r'^(=+)\s+(\S.*)')
 
         childmetadata = {}
+
         parsedcontentlines = []
 
         while not module_complete:
@@ -247,7 +250,7 @@ class Tasks:
                     # Don't save current content
                     return ('', len(lines))
                 elif 'Type' in metadata:
-                    generated_file = self.context.moduleFactory.create(metadata, parsedcontentlines, clobber=True)
+                    generated_file = self.context.moduleFactory.create(metadata, parsedcontentlines, clobber=True, prefixlines=prefixlines,  context=True)
                     return (generated_file, len(lines))
                 else:
                     return ('', len(lines))
@@ -338,6 +341,11 @@ class Tasks:
                 # Skip blank lines
                 if line.strip() == '':
                     continue
+
+                # skip setting lines
+                if line[0] == ':':
+                    continue
+
                 # Parse title line
                 result = regexp_title.search(line)
                 if result is not None:
@@ -383,6 +391,7 @@ class Tasks:
                         childmetadata['ConversionStatus'] = 'raw'
                         if timestamp: childmetadata['ConversionDate'] = str(datetime.datetime.now())
                         childmetadata['ConvertedFromFile'] = fromfilepath
+
                         (generated_file, indexofnextline) = self._parse_from_annotated(
                             childmetadata,
                             fromfilepath,
@@ -392,7 +401,9 @@ class Tasks:
                             selectedconditions,
                             timestamp,
                             showcontentstack,
-                            currconditionstack
+                            currconditionstack,
+                            # Misha 2025/05/06 create prefixlines from the definition lines before the title
+                            prefixlines = [x for x in tentativecontentlines if (len(x)>0 and x[0]==':')]
                         )
                         #if ('Type' in childmetadata) and (childmetadata['Type'].lower() == 'assembly'):
                         #    print ('include::' + generated_file + '[leveloffset=+1]')
@@ -405,7 +416,7 @@ class Tasks:
                             # Don't save current content and back up to the start of the tentative block
                             return ('', index_of_tentative_block)
                         # Save the current content
-                        generated_file = self.context.moduleFactory.create(metadata, parsedcontentlines, clobber=True)
+                        generated_file = self.context.moduleFactory.create(metadata, parsedcontentlines, clobber=True, prefixlines=prefixlines, context=True)
                         return (generated_file, index_of_tentative_block)
                     # Switch state
                     parsing_state = REGULAR_LINES

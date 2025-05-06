@@ -65,7 +65,8 @@ class ModuleFactory:
     def module_or_assembly_path(self, metadata):
         return os.path.join(self.module_dirpath(metadata), self.name_of_file(metadata))
 
-    def create(self, metadata, filecontents = None, clobber = False):
+    # Misha 2025/05/06: added support fot context creation/ID referencing and for prefixlines for metadata
+    def create(self, metadata, filecontents = None, clobber = False, prefixlines = [], context = False):
         type = metadata['Type'].lower()
         filename = self.name_of_file(metadata)
         dirpath = self.module_dirpath(metadata)
@@ -76,17 +77,45 @@ class ModuleFactory:
             print('INFO: File already exists, skipping: ' + filename)
             return filepath
         with open(filepath, 'w') as filehandle:
+            # Misha 2025/05/06: added context for assembly
+            if context and type=="assembly":
+                filehandle.write("ifdef::context[:parent-context: {context}]\n")
+
+
+            # Misha 2025/05/06: added prefixlines
+            for l in prefixlines:
+                filehandle.write(l)
             filehandle.write('// Metadata created by nebel\n')
             filehandle.write('//\n')
             for field in self.context.optionalMetadataFields:
                 if (field in metadata) and (field.lower() != 'title') and (field.lower() != 'includefiles'):
                     filehandle.write('// ' + field + ': ' + metadata[field] + '\n')
             filehandle.write('\n')
-            filehandle.write('[id="' + metadata['ModuleID'] + '"]\n')
+
+
+            # Misha 2025/05/06: added context referencing
+            module_id=metadata['ModuleID']
+            if context:
+                module_id+="_{context}"
+            filehandle.write('[id="' + module_id + '"]\n')
+
+            # Misha 2025/05/06: added context for assembly
+
+            if context and type=="assembly":
+                filehandle.write(":context: " + metadata['ModuleID'] + "\n")
+
+
             if filecontents is not None:
                 # If filecontents is provided, write the contents verbatim
                 filehandle.write('= ' + metadata['Title'] + '\n')
                 filehandle.writelines(filecontents)
+
+                # Misha 2025/05/06: added context for assembly
+                if context and type=="assembly":
+                    filehandle.write("ifdef::parent-context[:context: {parent-context}]\n")
+                    filehandle.write("ifndef::parent-context[:!context:]\n")
+
+
                 return filepath
             elif type == 'module':
                 # Cannot use a template, because we do not know the exact module type
