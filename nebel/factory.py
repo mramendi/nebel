@@ -80,7 +80,6 @@ class ModuleFactory:
             # Misha 2025/05/06: added context for assembly
             if context and type=="assembly":
                 filehandle.write("ifdef::context[:parent-context: {context}]\n")
-                filehandle.write(":context: " + metadata['ModuleID'] + "\n\n")
 
 
             # Misha 2025/05/06: added prefixlines
@@ -100,11 +99,19 @@ class ModuleFactory:
                 module_id+="_{context}"
             filehandle.write('[id="' + module_id + '"]\n')
 
-
-
             if filecontents is not None:
+
                 # If filecontents is provided, write the contents verbatim
                 filehandle.write('= ' + metadata['Title'] + '\n')
+
+                # Misha 2025/05/06: added context for assembly
+
+                if context and type=="assembly":
+                    filehandle.write("\n:context: " + metadata['ModuleID'] + "\n")
+                    if filecontents[0].strip() != "":
+                        filehandle.write("\n")
+
+
                 filehandle.writelines(filecontents)
 
                 # Misha 2025/05/06: added context for assembly
