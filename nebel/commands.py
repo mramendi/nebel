@@ -164,6 +164,10 @@ class Tasks:
 
 
     def adoc_split(self, args):
+
+        # Misha 2025/05/08: clear out links.csv if we are creating it
+        open("links.csv","w").close()
+
         frompattern = os.path.normpath(args.FROM_FILE)
         fromfiles = glob.glob(frompattern.replace('{}', '*'))
         if args.attribute_files:
@@ -203,7 +207,8 @@ class Tasks:
             timestamp = False,
             showcontentstack = [],
             currconditionstack = [],
-            prefixlines = []
+            prefixlines = [],
+            parentcontext = ""
     ):
 
         # Define some enums for state machine
@@ -243,6 +248,13 @@ class Tasks:
 
         parsedcontentlines = []
 
+        # Misha 2025/05/08: processing of context for links
+
+        if ('Type' in metadata) and (metadata['Type'].lower() == 'assembly') and ('ModuleID' in metadata):
+            mycontext = metadata['ModuleID']
+        else:
+            mycontext = parentcontext
+
         while not module_complete:
             # Check for end of file
             if indexofnextline >= len(lines):
@@ -250,7 +262,7 @@ class Tasks:
                     # Don't save current content
                     return ('', len(lines))
                 elif 'Type' in metadata:
-                    generated_file = self.context.moduleFactory.create(metadata, parsedcontentlines, clobber=True, prefixlines=prefixlines,  context=True)
+                    generated_file = self.context.moduleFactory.create(metadata, parsedcontentlines, clobber=True, prefixlines=prefixlines, context=args.new_context, parentcontext=parentcontext)
                     return (generated_file, len(lines))
                 else:
                     return ('', len(lines))
@@ -403,7 +415,8 @@ class Tasks:
                             showcontentstack,
                             currconditionstack,
                             # Misha 2025/05/06 create prefixlines from the definition lines before the title
-                            prefixlines = [x for x in tentativecontentlines if (len(x)>0 and x[0]==':')]
+                            prefixlines = [x for x in tentativecontentlines if (len(x)>0 and x[0]==':')],
+                            parentcontext = mycontext
                         )
                         #if ('Type' in childmetadata) and (childmetadata['Type'].lower() == 'assembly'):
                         #    print ('include::' + generated_file + '[leveloffset=+1]')
@@ -416,7 +429,7 @@ class Tasks:
                             # Don't save current content and back up to the start of the tentative block
                             return ('', index_of_tentative_block)
                         # Save the current content
-                        generated_file = self.context.moduleFactory.create(metadata, parsedcontentlines, clobber=True, prefixlines=prefixlines, context=True)
+                        generated_file = self.context.moduleFactory.create(metadata, parsedcontentlines, clobber=True, prefixlines=prefixlines, context=True, parentcontext=parentcontext)
                         return (generated_file, index_of_tentative_block)
                     # Switch state
                     parsing_state = REGULAR_LINES
@@ -1829,6 +1842,7 @@ split_parser.add_argument('FROM_FILE', help='Annotated AsciiDoc file (ending wit
 split_parser.add_argument('--legacybasedir', help='Base directory for annotated file content. Subdirectories of this directory are used as default categories.')
 split_parser.add_argument('--category-prefix', help='When splitting an annotated file, add this prefix to default categories.')
 split_parser.add_argument('-a', '--attribute-files', help='Specify a comma-separated list of attribute files')
+split_parser.add_argument('-n', '--new-context', help='Implement the new (2025) context templates and create links.csv',action='store_true')
 split_parser.add_argument('--conditions', help='Define a comma-separated list of condition attributes, for resolving ifdef and ifndef directives')
 split_parser.add_argument('--timestamp', help='Generate a timestamp in the generated module and assembly files', action='store_true')
 split_parser.set_defaults(func=tasks.adoc_split)
@@ -1886,7 +1900,7 @@ csv_parser.add_argument('ASSEMBLY_OR_BOOK_FILE', help='Path to the assembly or b
 csv_parser.add_argument('-c', '--cols', help='Specify a comma-separated list of column headers')
 csv_parser.set_defaults(func=tasks.csv)
 
-
 # Now, parse the args and call the relevant sub-command
 args = parser.parse_args()
+
 args.func(args)

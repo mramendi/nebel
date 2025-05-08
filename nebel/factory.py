@@ -66,7 +66,7 @@ class ModuleFactory:
         return os.path.join(self.module_dirpath(metadata), self.name_of_file(metadata))
 
     # Misha 2025/05/06: added support fot context creation/ID referencing and for prefixlines for metadata
-    def create(self, metadata, filecontents = None, clobber = False, prefixlines = [], context = False):
+    def create(self, metadata, filecontents = None, clobber = False, prefixlines = [], context = False, parentcontext = ""):
         type = metadata['Type'].lower()
         filename = self.name_of_file(metadata)
         dirpath = self.module_dirpath(metadata)
@@ -83,8 +83,9 @@ class ModuleFactory:
 
 
             # Misha 2025/05/06: added prefixlines
-            for l in prefixlines:
-                filehandle.write(l)
+            if context:
+                for l in prefixlines:
+                    filehandle.write(l)
             filehandle.write('// Metadata created by nebel\n')
             filehandle.write('//\n')
             for field in self.context.optionalMetadataFields:
@@ -98,6 +99,19 @@ class ModuleFactory:
             if context:
                 module_id+="_{context}"
             filehandle.write('[id="' + module_id + '"]\n')
+
+            # Misha 2025/05/08: added links.csv
+            if context:
+                links_csv=open("links.csv","a")
+                if 'ConvertedFromID' in metadata:
+                    original_id=metadata['ConvertedFromID']
+                else:
+                    original_id=metadata['ModuleID']
+                link_context=parentcontext
+                if link_context.strip()=="":
+                    link_context="{context}"
+                links_csv.write(original_id+","+filepath+"#"+metadata['ModuleID']+"_"+link_context+"\n")
+                links_csv.close()
 
             if filecontents is not None:
 
