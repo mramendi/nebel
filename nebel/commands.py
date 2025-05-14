@@ -265,14 +265,6 @@ class Tasks:
         else:
             mypathname = parentpathname
 
-        try:
-            print("ModuleID:",metadata['ModuleID'])
-        except KeyError:
-            print("No ModuleID")
-        print("parentpathname",parentpathname)
-        print("mypathname",mypathname)
-        print()
-
         while not module_complete:
             # Check for end of file
             if indexofnextline >= len(lines):
