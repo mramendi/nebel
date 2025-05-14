@@ -66,7 +66,7 @@ class ModuleFactory:
         return os.path.join(self.module_dirpath(metadata), self.name_of_file(metadata))
 
     # Misha 2025/05/06: added support fot context creation/ID referencing and for prefixlines for metadata
-    def create(self, metadata, filecontents = None, clobber = False, prefixlines = [], context = False, parentcontext = ""):
+    def create(self, metadata, filecontents = None, clobber = False, prefixlines = [], context = False, parentcontext = "", assemblypathname = ""):
         type = metadata['Type'].lower()
         filename = self.name_of_file(metadata)
         dirpath = self.module_dirpath(metadata)
@@ -110,7 +110,7 @@ class ModuleFactory:
                 link_context=parentcontext
                 if link_context.strip()=="":
                     link_context="{context}"
-                links_csv.write(original_id+","+filepath+"#"+metadata['ModuleID']+"_"+link_context+"\n")
+                links_csv.write(original_id+","+assemblypathname+"#"+metadata['ModuleID']+"_"+link_context+"\n")
                 links_csv.close()
 
             if filecontents is not None:

@@ -208,7 +208,8 @@ class Tasks:
             showcontentstack = [],
             currconditionstack = [],
             prefixlines = [],
-            parentcontext = ""
+            parentcontext = "",
+            parentpathname = ""
     ):
 
         # Define some enums for state machine
@@ -255,6 +256,23 @@ class Tasks:
         else:
             mycontext = parentcontext
 
+        # Misha 2025/05/14: processing links correctly, holding on to assembly path
+        if ('Type' in metadata) and ('ModuleID' in metadata):
+            if (metadata['Type'].lower() == 'assembly') or (parentpathname == ""):
+                mypathname = os.path.join(self.context.moduleFactory.module_dirpath(metadata),self.context.moduleFactory.name_of_file(metadata))
+            else:
+                mypathname = parentpathname
+        else:
+            mypathname = parentpathname
+
+        try:
+            print("ModuleID:",metadata['ModuleID'])
+        except KeyError:
+            print("No ModuleID")
+        print("parentpathname",parentpathname)
+        print("mypathname",mypathname)
+        print()
+
         while not module_complete:
             # Check for end of file
             if indexofnextline >= len(lines):
@@ -262,7 +280,7 @@ class Tasks:
                     # Don't save current content
                     return ('', len(lines))
                 elif 'Type' in metadata:
-                    generated_file = self.context.moduleFactory.create(metadata, parsedcontentlines, clobber=True, prefixlines=prefixlines, context=args.new_context, parentcontext=parentcontext)
+                    generated_file = self.context.moduleFactory.create(metadata, parsedcontentlines, clobber=True, prefixlines=prefixlines, context=args.new_context, parentcontext=parentcontext, assemblypathname=mypathname)
                     return (generated_file, len(lines))
                 else:
                     return ('', len(lines))
@@ -416,7 +434,8 @@ class Tasks:
                             currconditionstack,
                             # Misha 2025/05/06 create prefixlines from the definition lines before the title
                             prefixlines = [x for x in tentativecontentlines if (len(x)>0 and x[0]==':')],
-                            parentcontext = mycontext
+                            parentcontext = mycontext,
+                            parentpathname = mypathname
                         )
                         #if ('Type' in childmetadata) and (childmetadata['Type'].lower() == 'assembly'):
                         #    print ('include::' + generated_file + '[leveloffset=+1]')
@@ -429,7 +448,7 @@ class Tasks:
                             # Don't save current content and back up to the start of the tentative block
                             return ('', index_of_tentative_block)
                         # Save the current content
-                        generated_file = self.context.moduleFactory.create(metadata, parsedcontentlines, clobber=True, prefixlines=prefixlines, context=True, parentcontext=parentcontext)
+                        generated_file = self.context.moduleFactory.create(metadata, parsedcontentlines, clobber=True, prefixlines=prefixlines, context=True, parentcontext=parentcontext, assemblypathname=mypathname)
                         return (generated_file, index_of_tentative_block)
                     # Switch state
                     parsing_state = REGULAR_LINES
