@@ -422,7 +422,23 @@ class Tasks:
                     # Perform action
                     if action == CREATE_SUBSECTION:
                         # It's a simple subsection, not a module or assembly
+
+                        # Misha 2025/06/28: save link(s) if present
+                        link_id=None
+                        for potential_id in tentativecontentlines:
+                            result = regexp_id_line1.search(potential_id)
+                            if result is not None:
+                                link_id = result.group(1)
+                            result = regexp_id_line2.search(potential_id)
+                            if result is not None:
+                                link_id = result.group(1)
+                        if link_id:
+                            link_line = link_id+","+mypathname+"#"+metadata["ModuleID"]+"_"+parentcontext+"\n"
+                            with open("links.csv","a") as f:
+                                f.write(link_line)
+
                         # Reformat heading as a simple heading (starts with .)
+
                         lastline = tentativecontentlines.pop()
                         lastline = '.' + lastline.replace('=', '').lstrip() + '\n'
                         # Put back tentative lines
