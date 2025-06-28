@@ -191,6 +191,11 @@ class Tasks:
             if args.category_prefix:
                 categoryname = args.category_prefix + '-' + categoryname
             metadata['Category'] = categoryname
+            # Misha 2025/06/28 fixing weird main file processing
+            metadata['Type'] = "main"
+            metadata['ModuleID'] = "main"
+            metadata['Title'] = "main"
+
             equalssigncount = 0
             lines = self._resolve_includes(fromfile)
             indexofnextline = 0
@@ -265,16 +270,30 @@ class Tasks:
         else:
             mypathname = parentpathname
 
+        # Misha 2025/06/28 fixing weird main file processing
+        count_regular_lines = 0
+
         while not module_complete:
             # Check for end of file
             if indexofnextline >= len(lines):
                 if ('Type' in metadata) and (metadata['Type'].lower() == 'skip'):
+                    #debug output
+                    print("Ended without saving")
+
                     # Don't save current content
                     return ('', len(lines))
                 elif 'Type' in metadata:
+                    # Misha 2025/06/28 fixing weird main file processing
+                    if metadata['Type'] == 'main':
+                        if count_regular_lines == 0:
+                            return ('', len(lines))
+                        else:
+                            print("WARNING: main file not marked assembly, outputting main_new.adoc, CONVERSION CAN BE WEIRD")
                     generated_file = self.context.moduleFactory.create(metadata, parsedcontentlines, clobber=True, prefixlines=prefixlines, context=args.new_context, parentcontext=parentcontext, assemblypathname=mypathname)
                     return (generated_file, len(lines))
                 else:
+                    #debug output
+                    print("Ended without saving 2")
                     return ('', len(lines))
 
             if isconditionalizeactive:
@@ -350,6 +369,12 @@ class Tasks:
                     # Regular line
                     parsedcontentlines.append(line)
                     indexofnextline += 1
+                    # Misha 2025/06/28 fixing weird main file processing
+                    # increase the count, with some exceptions
+                    # nonzero triggers the warning if in the main file
+                    if (line.strip() != "") and not (line.find("include::")==0 and line.find("attr")>0) and not (line[0]==':'):
+                            count_regular_lines += 1
+
                 else:
                     # Switch state
                     parsing_state = TENTATIVE_PARSING

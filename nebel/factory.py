@@ -22,6 +22,11 @@ class ModuleFactory:
 
     def name_of_file(self, metadata):
         type = metadata['Type'].lower()
+
+        # Misha 2025/06/28 fixing failure to output main file
+        if type=="main":
+            return("main-new.adoc")
+
         moduleid = metadata['ModuleID']
         if not moduleid.endswith('{context}'):
             coremoduleid = moduleid
@@ -54,7 +59,10 @@ class ModuleFactory:
     def module_dirpath(self, metadata):
         category = metadata['Category']
         type = metadata['Type'].lower()
-        if type == 'assembly':
+        # Misha 2025/06/28 fixing failure to output main file
+        if type == 'main':
+            return(".")
+        elif type == 'assembly':
             return os.path.join(self.context.ASSEMBLIES_DIR, category)
         elif type in ['procedure', 'concept', 'reference', 'module']:
             return os.path.join(self.context.MODULES_DIR, category)
@@ -67,12 +75,16 @@ class ModuleFactory:
 
     # Misha 2025/05/06: added support fot context creation/ID referencing and for prefixlines for metadata
     def create(self, metadata, filecontents = None, clobber = False, prefixlines = [], context = False, parentcontext = "", assemblypathname = ""):
+
+
         type = metadata['Type'].lower()
         filename = self.name_of_file(metadata)
         dirpath = self.module_dirpath(metadata)
         if not os.path.exists(dirpath):
             os.makedirs(dirpath)
         filepath = os.path.join(dirpath, filename)
+        #debug output
+        print(f"create {filepath}")
         if os.path.exists(filepath) and not clobber:
             print('INFO: File already exists, skipping: ' + filename)
             return filepath
