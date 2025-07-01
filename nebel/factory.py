@@ -110,10 +110,13 @@ class ModuleFactory:
             module_id=metadata['ModuleID']
             if context:
                 module_id+="_{context}"
-            filehandle.write('[id="' + module_id + '"]\n')
+            # Misha 2025/06/30 no header for main
+            if not (('Type' in metadata) and (metadata['Type']=='main')):
+                filehandle.write('[id="' + module_id + '"]\n')
 
             # Misha 2025/05/08: added links.csv
-            if context:
+            # Misha 2025/06/30 no link exists for main
+            if context and not (('Type' in metadata) and (metadata['Type']=='main')):
                 links_csv=open("links.csv","a")
                 if 'ConvertedFromID' in metadata:
                     original_id=metadata['ConvertedFromID']
@@ -128,7 +131,9 @@ class ModuleFactory:
             if filecontents is not None:
 
                 # If filecontents is provided, write the contents verbatim
-                filehandle.write('= ' + metadata['Title'] + '\n')
+                # Misha 2025/06/30 no header for main
+                if not (('Type' in metadata) and (metadata['Type']=='main')):
+                    filehandle.write('= ' + metadata['Title'] + '\n')
 
                 # Misha 2025/05/06: added context for assembly
 

@@ -290,6 +290,7 @@ class Tasks:
                             return ('', len(lines)) # try to simulate the old way
                         if count_regular_lines > 0:
                             print("WARNING: main file not marked assembly, outputting main_new.adoc, CONVERSION CAN BE WEIRD")
+                        parsedcontentlines.insert(0,":context: main\n")
                     generated_file = self.context.moduleFactory.create(metadata, parsedcontentlines, clobber=True, prefixlines=prefixlines, context=args.new_context, parentcontext=parentcontext, assemblypathname=mypathname)
                     return (generated_file, len(lines))
                 else:
