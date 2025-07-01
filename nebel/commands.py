@@ -480,9 +480,12 @@ class Tasks:
                         if generated_file:
                             # Misha 2025/06/30 create new main correctly
                             prefixpath = ""
+                            level_offset_string = '[]'
                             if metadata["Type"] != "main":
                                 prefixpath = "../../"
-                            parsedcontentlines.append('include::' + prefixpath + generated_file + '[leveloffset=+1]\n\n')
+                                level_offset_string = '[leveloffset=+1]'
+
+                            parsedcontentlines.append('include::' + prefixpath + generated_file + level_offset_string + '\n\n')
                     elif action == END_CURRENT_MODULE:
                         if metadata['Type'].lower() == 'skip':
                             # Don't save current content and back up to the start of the tentative block
