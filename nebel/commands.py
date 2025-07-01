@@ -284,10 +284,11 @@ class Tasks:
                     return ('', len(lines))
                 elif 'Type' in metadata:
                     # Misha 2025/06/28 fixing weird main file processing
+                    # Misha 2025/06/30 create new main correctly
                     if metadata['Type'] == 'main':
-                        if count_regular_lines == 0:
-                            return ('', len(lines))
-                        else:
+                        if not context:
+                            return ('', len(lines)) # try to simulate the old way
+                        if count_regular_lines > 0:
                             print("WARNING: main file not marked assembly, outputting main_new.adoc, CONVERSION CAN BE WEIRD")
                     generated_file = self.context.moduleFactory.create(metadata, parsedcontentlines, clobber=True, prefixlines=prefixlines, context=args.new_context, parentcontext=parentcontext, assemblypathname=mypathname)
                     return (generated_file, len(lines))
@@ -365,6 +366,7 @@ class Tasks:
 
             if parsing_state == REGULAR_LINES:
                 line = lines[indexofnextline]
+
                 if (regexp_metadata.search(line) is None) and (regexp_id_line1.search(line) is None) and (regexp_id_line2.search(line) is None) and (regexp_title.search(line) is None):
                     # Regular line
                     parsedcontentlines.append(line)
@@ -475,7 +477,11 @@ class Tasks:
                         childmetadata = {}
                         parsedcontentlines.append('\n')
                         if generated_file:
-                            parsedcontentlines.append('include::../../' + generated_file + '[leveloffset=+1]\n\n')
+                            # Misha 2025/06/30 create new main correctly
+                            prefixpath = ""
+                            if metadata["Type"] != "main":
+                                prefixpath = "../../"
+                            parsedcontentlines.append('include::' + prefixpath + generated_file + '[leveloffset=+1]\n\n')
                     elif action == END_CURRENT_MODULE:
                         if metadata['Type'].lower() == 'skip':
                             # Don't save current content and back up to the start of the tentative block
@@ -572,8 +578,25 @@ class Tasks:
         regexp_title = re.compile(r'^(=+)\s+(\S.*)')
         regexp_tag_begin = re.compile(r'tag::([^\[]+)\[\]')
         regexp_tag_end   = re.compile(r'end::([^\[]+)\[\]')
+
+        # Misha 2024/06/30 adding //literal
+        regexp_literal = re.compile(r'^//\s*literal\s*$')
+
+        next_line_literal = False
+
+
         with open(file, 'r') as f:
             for line in f:
+                # Misha 2025/06/30 add //literal
+                if args.new_context:
+                    if next_line_literal:
+                        linesinfile.append(line)
+                        next_line_literal = False
+                        continue
+                    if regexp_literal.search(line):
+                        next_line_literal = True
+                        continue
+
                 if istaggingactive:
                     result = regexp_tag_begin.search(line)
                     if result is not None:
