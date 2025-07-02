@@ -27,6 +27,7 @@ def modify_xref(match, filename, path_to_root, links_map):
     Replaces an xref match with a new link from the links_map.
     Kudos to Gemini for the approach.
     """
+    print(f"DEBUG: Found match in '{filename}': {match.group(0)}")
     if match.group(1) is not None:  # <<...>> matched
         xref_id = match.group(2)
         link_text = match.group(4) if match.group(4) else xref_id
@@ -75,7 +76,7 @@ def main():
     # Configuration
     root_dirs = ['assemblies', 'modules']
     regex1 = r"<<([_a-zA-Z0-9-.:#]+)(, ?([^>]+))?>>"
-    regex2 = r"xref:([_a-zA-Z0-9-.:#]+)\[([^\]]*)\]"
+    regex2 = r"xref:([_a-zA-Z0-9-.:#/]+)\[([^\]]*)\]"
     combined_regex = f"({regex1})|({regex2})"
 
     links_map = load_links("links.csv")
