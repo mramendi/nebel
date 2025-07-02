@@ -199,7 +199,7 @@ class Tasks:
             equalssigncount = 0
             lines = self._resolve_includes(fromfile)
             indexofnextline = 0
-            self._parse_from_annotated(metadata, fromfile, lines, indexofnextline, equalssigncount, selectedconditions, args.timestamp)
+            self._parse_from_annotated(metadata, fromfile, lines, indexofnextline, equalssigncount, selectedconditions, args.timestamp, parentcontext = "main")
 
     def _parse_from_annotated(
             self,
@@ -290,7 +290,6 @@ class Tasks:
                             return ('', len(lines)) # try to simulate the old way
                         if count_regular_lines > 0:
                             print("WARNING: main file not marked assembly, outputting main_new.adoc, CONVERSION CAN BE WEIRD")
-                        parsedcontentlines.insert(0,":context: main\n")
                     generated_file = self.context.moduleFactory.create(metadata, parsedcontentlines, clobber=True, prefixlines=prefixlines, context=args.new_context, parentcontext=parentcontext, assemblypathname=mypathname)
                     return (generated_file, len(lines))
                 else:

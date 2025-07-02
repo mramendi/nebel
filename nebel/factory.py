@@ -136,8 +136,8 @@ class ModuleFactory:
                     filehandle.write('= ' + metadata['Title'] + '\n')
 
                 # Misha 2025/05/06: added context for assembly
-
-                if context and type=="assembly":
+                # Misha 2025/07/02: handle context for main
+                if context and type in ["assembly","main"]:
                     filehandle.write("\n:context: " + metadata['ModuleID'] + "\n")
                     if filecontents[0].strip() != "":
                         filehandle.write("\n")
